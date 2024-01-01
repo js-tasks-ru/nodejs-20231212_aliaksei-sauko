@@ -31,7 +31,10 @@ server.on('request', (req, res) => {
         fileStream.destroy(error);
       });
 
-      req.on('aborted', () => {
+      req.on('close', () => {
+        if (req.readableEnded) return;
+        // req.readableEnded is false for the aborded stream
+
         fileStream.end();
 
         fs.unlink(filepath, () => {});
