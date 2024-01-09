@@ -31,8 +31,53 @@ router.get('/subscribe',
     loadingProcess);
 
 
-router.post('/publish', async (ctx, next) => {
+//
+// POST /publish
+
+const parseMessageData = (ctx, next) => {
+    const requestBody = ctx.request.body;
+
+    if (!requestBody.hasOwnProperty('message')) {
+        return;
+    }
+
+    ctx.message = requestBody.message;
+
+    return next();
+}
+
+const sendMessage = (ctx, next) => {
+    ctx.subscriberContexts.forEach(sc => {
+        if (!sc) {
+            return;
+        }
+
+        sc.ctx.body = ctx.message;
+
+        sc.next();
     });
+
+    return next();
+}
+
+const clearSubscriberContexts = (ctx, next) => {
+    ctx.subscribes = [];
+
+    return next();
+}
+
+const endResponse = (ctx, next) => {
+    // an empty response body
+    ctx.body = null;
+
+    return next();
+}
+
+router.post('/publish',
+    parseMessageData,
+    sendMessage,
+    clearSubscriberContexts,
+    endResponse);
 
 app.use(router.routes());
 
