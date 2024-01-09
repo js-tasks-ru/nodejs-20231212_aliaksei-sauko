@@ -79,6 +79,11 @@ router.post('/publish',
     clearSubscriberContexts,
     endResponse);
 
+
+//
+// add routers
+
 app.use(router.routes());
+
 
 module.exports = app;
