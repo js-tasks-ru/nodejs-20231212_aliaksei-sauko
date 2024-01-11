@@ -59,7 +59,7 @@ const clearSubscriberContexts = (ctx, next) => {
 }
 
 const endResponse = (ctx, next) => {
-    // an empty response body
+    // set an empty response body
     ctx.body = null;
 
     return next();
