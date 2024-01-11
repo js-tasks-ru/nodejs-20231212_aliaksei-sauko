@@ -14,7 +14,19 @@ app.context.subscriberResolves = new Set();
 // GET /subscribe
 
 const processSubscriber = async (ctx, next) => {
-    const message = await new Promise(resolve => { ctx.subscriberResolves.add(resolve); });
+
+    const message = await new Promise(resolve => {
+        ctx.subscriberResolves.add(resolve);
+
+        // use nodejs `res` (response) object to process close connection.
+        // do not confuse the nodejs object with the koajs `response` object
+        ctx.res.on('close', () => {
+            // remove the subscriber if connection is closed
+            ctx.subscriberResolves.delete(resolve);
+
+            resolve();
+        });
+    });
 
     ctx.body = message;
 
