@@ -30,7 +30,8 @@ router.get('/subscribe', processSubscriber);
 const parseMessageData = (ctx, next) => {
     const requestBody = ctx.request.body;
 
-    if (!requestBody.hasOwnProperty('message')) {
+    if (!requestBody.hasOwnProperty('message')
+        || !requestBody.message) {
         return;
     }
 
