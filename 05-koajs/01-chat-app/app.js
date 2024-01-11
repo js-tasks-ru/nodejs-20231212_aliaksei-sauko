@@ -8,13 +8,13 @@ app.use(require('koa-bodyparser')());
 const Router = require('koa-router');
 const router = new Router();
 
-app.context.subscriberContexts = [];
+app.context.subscriberContexts = new Set();
 
 //
 // GET /subscribe
 
 const addSubscriber = (ctx, next) => {
-    ctx.subscriberContexts.push({ ctx, next });
+    ctx.subscriberContexts.add({ ctx, next });
 
     return next();
 }
@@ -61,7 +61,7 @@ const sendMessage = (ctx, next) => {
 }
 
 const clearSubscriberContexts = (ctx, next) => {
-    ctx.subscribes = [];
+    ctx.subscriberContexts.clear();
 
     return next();
 }
