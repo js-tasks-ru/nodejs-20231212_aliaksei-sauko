@@ -8,27 +8,32 @@ app.use(require('koa-bodyparser')());
 const Router = require('koa-router');
 const router = new Router();
 
-app.context.subscriberContexts = [];
+app.context.subscriberResolves = new Set();
 
 //
 // GET /subscribe
 
-const addSubscriber = (ctx, next) => {
-    ctx.subscriberContexts.push({ ctx, next });
+const processSubscriber = async (ctx, next) => {
+
+    const message = await new Promise(resolve => {
+        ctx.subscriberResolves.add(resolve);
+
+        // use nodejs `res` (response) object to process close connection.
+        // do not confuse the nodejs object with the koajs `response` object
+        ctx.res.on('close', () => {
+            // remove the subscriber if connection is closed
+            ctx.subscriberResolves.delete(resolve);
+
+            resolve();
+        });
+    });
+
+    ctx.body = message;
 
     return next();
 }
 
-const loadingProcess = async (ctx, next) => {
-    // use an endpoint timeout interval less than 500ms
-    await new Promise(resolve => setTimeout(resolve, 200));
-
-    // `next()` is called in an endpoint `/publish`
-}
-
-router.get('/subscribe',
-    addSubscriber,
-    loadingProcess);
+router.get('/subscribe', processSubscriber);
 
 
 //
@@ -37,7 +42,8 @@ router.get('/subscribe',
 const parseMessageData = (ctx, next) => {
     const requestBody = ctx.request.body;
 
-    if (!requestBody.hasOwnProperty('message')) {
+    if (!requestBody.hasOwnProperty('message')
+        || !requestBody.message) {
         return;
     }
 
@@ -47,27 +53,25 @@ const parseMessageData = (ctx, next) => {
 }
 
 const sendMessage = (ctx, next) => {
-    ctx.subscriberContexts.forEach(sc => {
-        if (!sc) {
+    ctx.subscriberResolves.forEach(resolve => {
+        if (!resolve) {
             return;
         }
 
-        sc.ctx.body = ctx.message;
-
-        sc.next();
+        resolve(ctx.message);
     });
 
     return next();
 }
 
 const clearSubscriberContexts = (ctx, next) => {
-    ctx.subscribes = [];
+    ctx.subscriberResolves.clear();
 
     return next();
 }
 
 const endResponse = (ctx, next) => {
-    // an empty response body
+    // set an empty response body
     ctx.body = null;
 
     return next();
