@@ -2,6 +2,16 @@ const Product = require('../models/Product');
 const mapProduct = require('../mappers/product');
 const mongoose = require('mongoose');
 
+module.exports.validateObjectId = function validateObjectId(ctx, next) {
+  const itemId = ctx.params.id;
+
+  if (!mongoose.isValidObjectId(itemId)) {
+    ctx.throw(400);
+  }
+
+  return next();
+}
+
 module.exports.productsBySubcategory = async function productsBySubcategory(ctx, next) {
   const { subcategory } = ctx.query;
 
@@ -24,10 +34,6 @@ module.exports.productList = async function productList(ctx, next) {
 
 module.exports.productById = async function productById(ctx, next) {
   const productId = ctx.params.id;
-
-  if (!mongoose.isValidObjectId(productId)) {
-    ctx.throw(400);
-  }
 
   if (!productId) return next();
 
