@@ -27,8 +27,6 @@ module.exports.productById = async function productById(ctx, next) {
 
   if (!mongoose.isValidObjectId(productId)) {
     ctx.throw(400);
-
-    return;
   }
 
   if (!productId) return next();
@@ -37,8 +35,6 @@ module.exports.productById = async function productById(ctx, next) {
 
   if (!productEntity) {
     ctx.throw(404);
-
-    return;
   }
 
   const product = mapProduct(productEntity);
