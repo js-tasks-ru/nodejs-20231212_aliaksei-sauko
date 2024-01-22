@@ -33,6 +33,9 @@ app.use((ctx, next) => {
   ctx.login = async function(user) {
     const token = uuid();
 
+    const dateNowUtc = new Date();
+    await Session.create({ token: token, lastVisit: dateNowUtc, user: user._id });
+
     return token;
   };
 
