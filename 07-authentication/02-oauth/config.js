@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 module.exports = {
   app: {
     host: process.env.APP_HOST || 'http://localhost:3000',
