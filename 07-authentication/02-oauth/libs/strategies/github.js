@@ -6,7 +6,7 @@ const authenticate = require('./authenticate');
 module.exports = new GithubStrategy({
   clientID: config.providers.github.app_id,
   clientSecret: config.providers.github.app_secret,
-  callbackURL: config.providers.github.callback_uri,
+  callbackURL: `${config.app.host}${config.providers.github.callback_uri}`,
   scope: ['user:email'],
   session: false,
 }, function(accessToken, refreshToken, profile, done) {
