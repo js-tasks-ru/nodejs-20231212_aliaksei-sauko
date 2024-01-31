@@ -28,8 +28,17 @@ function socket(server) {
     next();
   });
 
-  io.on('connection', function(socket) {
-    socket.on('message', async (msg) => {});
+  io.on('connection', function (socket) {
+    socket.on('message', async (msg) => {
+      const message = {
+        date: new Date(),
+        text: msg,
+        chat: socket.user.id,
+        user: socket.user.displayName
+      };
+
+      await Message.create(message);
+    });
   });
 
   return io;
