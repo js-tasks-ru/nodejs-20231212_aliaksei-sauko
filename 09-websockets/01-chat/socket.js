@@ -6,7 +6,7 @@ const Message = require('./models/Message');
 const mapUser = require('./mappers/user');
 
 function socket(server) {
-  const io = socketIO(server);
+  const io = socketIO(server, { allowEIO3: true });
 
   io.use(async function (socket, next) {
     const token = socket.handshake.query.token;
