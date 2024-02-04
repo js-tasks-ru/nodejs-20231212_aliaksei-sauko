@@ -17,7 +17,7 @@ module.exports.productsBySubcategory = async function productsBySubcategory(ctx,
 
   if (!subcategory) return next();
 
-  const productEntities = await Product.find({ subcategory: { _id: subcategory } }).exec();
+  const productEntities = await Product.find({ subcategory: subcategory });
 
   const products = productEntities.map(mapProduct) || [];
 
