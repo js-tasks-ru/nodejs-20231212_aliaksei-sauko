@@ -1,6 +1,7 @@
 const app = require('../app');
 const connection = require('../libs/connection');
 const mongoose = require('mongoose');
+const mapMessage = require('../mappers/message');
 const User = require('../models/User');
 const Session = require('../models/Session');
 const Message = require('../models/Message');
@@ -14,7 +15,7 @@ const socket = require('../socket');
 const io = require('socket.io-client');
 
 describe('websockets/chat', () => {
-  describe('чат', function() {
+  describe('чат', function () {
     let _socket;
     let _server;
     let client;
@@ -59,7 +60,7 @@ describe('websockets/chat', () => {
       await u.setPassword(userData.password);
       await u.save();
 
-      await Session.create({token: 'token', user: u, lastVisit: new Date()});
+      await Session.create({ token: 'token', user: u, lastVisit: new Date() });
 
       client = io('http://localhost:3000?token=token');
       let resolve;
@@ -83,7 +84,7 @@ describe('websockets/chat', () => {
       await u.setPassword(userData.password);
       await u.save();
 
-      await Session.create({token: 'token', user: u, lastVisit: new Date()});
+      await Session.create({ token: 'token', user: u, lastVisit: new Date() });
 
       client = io('http://localhost:3000?token=token');
       let resolve;
@@ -118,7 +119,7 @@ describe('websockets/chat', () => {
       await u.save();
 
       const d = new Date();
-      await Session.create({token: 'token', user: u, lastVisit: new Date()});
+      await Session.create({ token: 'token', user: u, lastVisit: new Date() });
 
       const message = await Message.create({
         user: u.displayName,
@@ -150,6 +151,71 @@ describe('websockets/chat', () => {
           user: 'user',
         }],
       });
+    });
+
+    it('получение списка сообщений, новые сообщения в начале списка', async () => {
+      //
+      // arrange
+
+      const userData = {
+        email: 'user@mail.com',
+        displayName: 'user',
+        password: '123123',
+      };
+      const u = new User(userData);
+      await u.setPassword(userData.password);
+      await u.save();
+
+      await Session.create({ token: 'token', user: u, lastVisit: new Date() });
+
+
+      const messages = [{
+        user: u.displayName,
+        chat: u,
+        text: 'Message 1',
+        date: new Date(2024, 1, 2, 1, 0, 0),
+      },
+      {
+        user: u.displayName,
+        chat: u,
+        text: 'Message 3',
+        date: new Date(2024, 1, 2, 4, 0, 0),
+      }, {
+        user: u.displayName,
+        chat: u,
+        text: 'Message 2',
+        date: new Date(2024, 1, 2, 2, 0, 0),
+      }];
+
+      const messageEntities = await Message.create(messages);
+
+      const descendingDateOrder = (m1, m2) => -m1.date.getTime() + m2.date.getTime();
+      const sortedMessages = messageEntities
+        .sort(descendingDateOrder)
+        .map(mapMessage);
+
+      await Message.create({
+        user: 'another-user',
+        chat: mongoose.Types.ObjectId(),
+        text: 'hello, all good, how are you?',
+        date: new Date(),
+      });
+
+      //
+      // act
+
+      const response = await request({
+        method: 'get',
+        url: 'http://localhost:3001/api/messages',
+        headers: {
+          'Authorization': 'Bearer token',
+        },
+      });
+
+      // 
+      // assert
+
+      expect(response.data.messages).to.have.deep.ordered.members(sortedMessages);
     });
 
     it('незалогиненный пользователь не может сделать запрос на /messages', async () => {

@@ -3,6 +3,6 @@ module.exports = function mapMessage(message) {
     id: message.id,
     text: message.text,
     user: message.user,
-    date: message.date,
+    date: message.date.toISOString(),
   };
 };
