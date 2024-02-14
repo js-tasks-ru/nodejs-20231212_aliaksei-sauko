@@ -24,5 +24,19 @@ module.exports.register = async (ctx, next) => {
 };
 
 module.exports.confirm = async (ctx, next) => {
+    const user = await User.findOne({ verificationToken: ctx.request.body.verificationToken });
+    if (!user) {
+        ctx.throw(400, 'Ссылка подтверждения недействительна или устарела');
 
+        return;
+    }
+
+    user.verificationToken = undefined;
+    await user.save();
+
+    const sessionToken = await ctx.login(user);
+
+    ctx.body = { token: sessionToken };
+
+    next();
 };
