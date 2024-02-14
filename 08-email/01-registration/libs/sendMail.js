@@ -11,12 +11,12 @@ const StubTransport = require('nodemailer-stub-transport');
 const transportEngine = process.env.NODE_ENV === 'test' ?
   new StubTransport() :
   new SMTPTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
+    host: config.smtp.host,
+    port: config.smtp.port,
     secure: true,
     auth: {
-      user: config.mailer.user,
-      pass: config.mailer.password,
+      user: config.smtp.auth.user,
+      pass: config.smtp.auth.pass,
     },
   });
 
@@ -30,25 +30,30 @@ transport.use('compile', htmlToText());
 * options.template - имя файла, содержащего шаблон письма
 * options.locals - объект с переменными, которые будут переданы в шаблон
 * options.to - email, на который будет отправлено письмо
+* options.from - email, от которого будет отправлено письмо
 * options.subject - тема письма
 * пример:
 *     await sendMail({
 *       template: 'confirmation',
 *       locals: {token: 'token'},
 *       to: 'user@mail.com',
+*       from: 'info@domain.com',
 *       subject: 'Подтвердите почту',
 *     });
 * */
 module.exports = async function sendMail(options) {
   const html = pug.renderFile(
-      path.join(__dirname, '../templates', options.template) + '.pug',
-      options.locals || {},
+    path.join(__dirname, '../templates', options.template) + '.pug',
+    options.locals || {},
   );
 
   const message = {
     html: juice(html),
     to: {
       address: options.to,
+    },
+    from: {
+      address: options.from,
     },
     subject: options.subject,
   };
